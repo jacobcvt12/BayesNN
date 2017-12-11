@@ -31,6 +31,7 @@ module BayesNN
 using StatsFuns
 using Distributions
 using GradDescent
+using ForwardDiff
 
 export 
     Nnet,
