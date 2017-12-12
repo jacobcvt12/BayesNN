@@ -24,9 +24,10 @@ function Nnet(y::Array{Int64, 1},
     D = size(X)[2]
 
     # still need to account for more than one hidden layer
-    weights = D * nodes + # layer 1
-              hidden_layers + 1 + # biases
-              nodes # final layer
+    weights = D * nodes + D + # input to layer 1
+              # layer n to layer n + 1
+              (hidden_layer - 1) * ((nodes + 1) * nodes)  +
+              nodes + 1 # final layer to f(X)
 
     # initialize variational parameters
     λ = rand(Normal(), weights, 2)
@@ -48,10 +49,40 @@ function ℒ(y, X, prior, μ, σ)
     log_prior = logpdf.(prior, z)
     log_lik = 0
 
+    # get number of covariates
+    D = size(X)[2]
+
+    # store layer calculations
+    layer = zeros(nodes)
+    layer_p1 = zeros(nodes)
+
     for n in 1:length(y)
-        layer1 = sigmoid.([dot(z[2:3], X[n, :]), dot(z[4:5], X[n, :])] + z[1])
-        layer2 = sigmoid(z[6] + dot(z[7:8], layer1))
-        log_lik += logpdf(Bernoulli(layer2), y[n])
+        # number of used weights
+        j = 0
+
+        # build first hidden layer
+        for node in 1:nodes
+            i = j + 1
+            j = i + D
+            layer[node] = sigmoid.(dot(z[i:(j-1)], X[n, :]) + z[j])
+        end
+
+        # build other hidden layers
+        if hidden_layer > 1
+            for l in 2:hidden_layer
+                i = j + 1
+                j = i + node
+                layer_p1[node] = sigmoid.(dot(z[i:(j-1)], layer) + z[j])
+                layer = copy(layer_p1)
+            end
+        end
+
+        # build output
+        i = j + 1
+        j = i + node
+        out = sigmoid(dot(z[i:(j-1)], layer) + z[j])
+
+        log_lik += logpdf(Bernoulli(out), y[n])
     end
 
     log_joint = log_prior + log_lik
