@@ -115,9 +115,9 @@ end
 function predict(nn::Nnet,
                  X::Array{Float64, 2})
 
-    out = zeros(size(X)[2])
+    out = zeros(size(X)[1])
 
-    for n in 1:size(X)[2]
+    for n in 1:size(X)[1]
         layer1 = sigmoid.([dot(nn.μ[2:3], X[n, :]), dot(nn.μ[4:5], X[n, :])] + nn.μ[1])
         out[n] = sigmoid(nn.μ[6] + dot(nn.μ[7:8], layer1))
     end
