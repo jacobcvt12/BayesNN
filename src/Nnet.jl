@@ -24,9 +24,9 @@ function Nnet(y::Array{Int64, 1},
     D = size(X)[2]
 
     # still need to account for more than one hidden layer
-    weights = D * nodes + D + # input to layer 1
+    weights = D * nodes + nodes + # input to layer 1
               # layer n to layer n + 1
-              (hidden_layer - 1) * ((nodes + 1) * nodes)  +
+              (hidden_layers - 1) * ((nodes + 1) * nodes)  +
               nodes + 1 # final layer to f(X)
 
     # initialize variational parameters
@@ -42,7 +42,14 @@ function Nnet(y::Array{Int64, 1},
 end
 
 # estimate of evidence lower bound
-function ℒ(y, X, prior, μ, σ)
+function ℒ(nn::Nnet, μ, σ)
+    # extract elements from Nnet
+    y = nn.y
+    X = nn.X
+    prior = nn.prior
+    hidden_layer = nn.hidden_layers
+    nodes = nn.nodes
+
     ϵ = rand(Normal(), length(μ))
     z = μ + ϵ .* σ
 
@@ -70,16 +77,18 @@ function ℒ(y, X, prior, μ, σ)
         # build other hidden layers
         if hidden_layer > 1
             for l in 2:hidden_layer
-                i = j + 1
-                j = i + node
-                layer_p1[node] = sigmoid.(dot(z[i:(j-1)], layer) + z[j])
-                layer = copy(layer_p1)
+                for node in 1:nodes
+                    i = j + 1
+                    j = i + nodes
+                    layer_p1[node] = sigmoid.(dot(z[i:(j-1)], layer) + z[j])
+                    layer = copy(layer_p1)
+                end
             end
         end
 
         # build output
         i = j + 1
-        j = i + node
+        j = i + nodes
         out = sigmoid(dot(z[i:(j-1)], layer) + z[j])
 
         log_lik += logpdf(Bernoulli(out), y[n])
@@ -110,8 +119,7 @@ function fit(nn::Nnet,
         nn.μ = nn.λ[:, 1]
         nn.σ = softplus.(nn.λ[:, 2])
 
-        g = ForwardDiff.jacobian(ϕ -> ℒ(nn.y, nn.X, nn.prior, ϕ[1:D], 
-                                        ϕ[(D+1):2D]), 
+        g = ForwardDiff.jacobian(ϕ -> ℒ(nn, ϕ[1:D], ϕ[(D+1):2D]), 
                                  vcat(nn.μ, nn.σ))
         ∇ℒ = hcat(diag(g[1:D, 1:D]),
                   diag(g[1:D, (D+1):2D]))
