@@ -151,7 +151,7 @@ function fit(nn::Nnet,
     elbo = 0
 
     for i in 1:elboiter
-        elbo += mean(ℒ(nn.y, nn.X, nn.prior, nn.μ, nn.σ))
+        elbo += mean(ℒ(nn, nn.μ, nn.σ))
     end
 
     elbo = elbo / elboiter
