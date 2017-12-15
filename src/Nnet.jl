@@ -173,6 +173,9 @@ function predict(nn::Nnet,
     layer_p1 = zeros(nodes)
     out = zeros(N)
 
+    # for right now, fix z at mean
+    z = nn.μ
+
     for n in 1:N
         # number of used weights
         j = 0
