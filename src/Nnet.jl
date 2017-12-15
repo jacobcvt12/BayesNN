@@ -161,12 +161,46 @@ end
 
 function predict(nn::Nnet,
                  X::Array{Float64, 2})
+    # extract elements from Nnet
+    hidden_layer = nn.hidden_layers
+    nodes = nn.nodes
 
-    out = zeros(size(X)[1])
+    # get number of covariates
+    N, D = size(X)
 
-    for n in 1:size(X)[1]
-        layer1 = sigmoid.([dot(nn.μ[2:3], X[n, :]), dot(nn.μ[4:5], X[n, :])] + nn.μ[1])
-        out[n] = sigmoid(nn.μ[6] + dot(nn.μ[7:8], layer1))
+    # store layer calculations
+    layer = zeros(eltype(μ), nodes)
+    layer_p1 = zeros(eltype(μ), nodes)
+    out = zeros(eltype(μ), N)
+
+    for n in 1:N
+        # number of used weights
+        j = 0
+
+        # build first hidden layer
+        for node in 1:nodes
+            i = j + 1
+            j = i + D
+            layer[node] = sigmoid(dot(z[i:(j-1)], X[n, :]) + z[j])
+        end
+
+        # build other hidden layers
+        if hidden_layer > 1
+            for l in 2:hidden_layer
+                for node in 1:nodes
+                    i = j + 1
+                    j = i + nodes
+                    layer_p1[node] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
+                end
+
+                layer = copy(layer_p1)
+            end
+        end
+
+        # build output
+        i = j + 1
+        j = i + nodes
+        out[n] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
     end
 
     return out
