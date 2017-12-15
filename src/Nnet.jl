@@ -169,9 +169,9 @@ function predict(nn::Nnet,
     N, D = size(X)
 
     # store layer calculations
-    layer = zeros(eltype(μ), nodes)
-    layer_p1 = zeros(eltype(μ), nodes)
-    out = zeros(eltype(μ), N)
+    layer = zeros(nodes)
+    layer_p1 = zeros(nodes)
+    out = zeros(N)
 
     for n in 1:N
         # number of used weights
