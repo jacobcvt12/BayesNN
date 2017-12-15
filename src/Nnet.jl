@@ -50,20 +50,26 @@ function ℒ(nn::Nnet, μ, σ)
     hidden_layer = nn.hidden_layers
     nodes = nn.nodes
 
+    # draw values from q
     ϵ = rand(Normal(), length(μ))
     z = μ + ϵ .* σ
 
-    log_prior = logpdf.(prior, z)
-    log_lik = 0
+    # initialize vectors for calculating ELBO
+    # note that the type is important for AD
+    log_lik = zeros(eltype(μ), 1)
+    log_prior = zeros(eltype(μ), length(μ))
+    entropy = zeros(eltype(μ), length(μ))
+    f = zeros(eltype(μ), length(μ))
 
     # get number of covariates
-    D = size(X)[2]
+    N, D = size(X)
 
     # store layer calculations
-    layer = zeros(nodes)
-    layer_p1 = zeros(nodes)
+    layer = zeros(eltype(μ), nodes)
+    layer_p1 = zeros(eltype(μ), nodes)
+    out = zeros(eltype(μ), N)
 
-    for n in 1:length(y)
+    for n in 1:N
         # number of used weights
         j = 0
 
@@ -71,7 +77,7 @@ function ℒ(nn::Nnet, μ, σ)
         for node in 1:nodes
             i = j + 1
             j = i + D
-            layer[node] = sigmoid.(dot(z[i:(j-1)], X[n, :]) + z[j])
+            layer[node] = sigmoid(dot(z[i:(j-1)], X[n, :]) + z[j])
         end
 
         # build other hidden layers
@@ -80,25 +86,27 @@ function ℒ(nn::Nnet, μ, σ)
                 for node in 1:nodes
                     i = j + 1
                     j = i + nodes
-                    layer_p1[node] = sigmoid.(dot(z[i:(j-1)], layer) + z[j])
-                    layer = copy(layer_p1)
+                    layer_p1[node] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
                 end
+
+                layer = copy(layer_p1)
             end
         end
 
         # build output
         i = j + 1
         j = i + nodes
-        out = sigmoid(dot(z[i:(j-1)], layer) + z[j])
-
-        log_lik += logpdf(Bernoulli(out), y[n])
+        out[n] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
+        log_lik += logpdf(Bernoulli(out[n]), y[n])
     end
 
-    log_joint = log_prior + log_lik
-
-    entropy = logpdf.(Normal.(μ, σ), z)
-
-    f = log_joint - entropy
+    # construct ELBO estimate
+    for i in 1:length(μ)
+        # first calculate log prior and entropy
+        log_prior[i] = logpdf(nn.prior, z[i])
+        entropy[i] = logpdf(Normal(μ[i], σ[i]), z[i])
+        f[i] = log_lik[1] + log_prior[i] - entropy[i]
+    end
 
     return f
 end
@@ -110,7 +118,7 @@ function fit(nn::Nnet,
              msg=100,
              elboiter=10)
     N = length(nn.y)
-    D = 8
+    D = nn.weights
 
     mean_δ = 1.0
     i = 1
