@@ -39,6 +39,7 @@ export
     predict
 
 include("helper.jl")
+include("propagate.jl")
 include("Nnet.jl")
 
 end # module

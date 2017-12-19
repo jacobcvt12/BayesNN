@@ -70,33 +70,11 @@ function ℒ(nn::Nnet, μ, σ)
     out = zeros(eltype(μ), N)
 
     for n in 1:N
-        # number of used weights
-        j = 0
+        out[n] = fwd_prop(X[n, :],
+                          nodes, hidden_layer,
+                          z,
+                          layer, layer_p1)
 
-        # build first hidden layer
-        for node in 1:nodes
-            i = j + 1
-            j = i + D
-            layer[node] = sigmoid(dot(z[i:(j-1)], X[n, :]) + z[j])
-        end
-
-        # build other hidden layers
-        if hidden_layer > 1
-            for l in 2:hidden_layer
-                for node in 1:nodes
-                    i = j + 1
-                    j = i + nodes
-                    layer_p1[node] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
-                end
-
-                layer = copy(layer_p1)
-            end
-        end
-
-        # build output
-        i = j + 1
-        j = i + nodes
-        out[n] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
         log_lik += logpdf(Bernoulli(out[n]), y[n])
     end
 
@@ -177,33 +155,10 @@ function predict(nn::Nnet,
     z = nn.μ
 
     for n in 1:N
-        # number of used weights
-        j = 0
-
-        # build first hidden layer
-        for node in 1:nodes
-            i = j + 1
-            j = i + D
-            layer[node] = sigmoid(dot(z[i:(j-1)], X[n, :]) + z[j])
-        end
-
-        # build other hidden layers
-        if hidden_layer > 1
-            for l in 2:hidden_layer
-                for node in 1:nodes
-                    i = j + 1
-                    j = i + nodes
-                    layer_p1[node] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
-                end
-
-                layer = copy(layer_p1)
-            end
-        end
-
-        # build output
-        i = j + 1
-        j = i + nodes
-        out[n] = sigmoid(dot(z[i:(j-1)], layer) + z[j])
+        out[n] = fwd_prop(X[n, :],
+                          nodes, hidden_layer,
+                          z,
+                          layer, layer_p1)
     end
 
     return out
