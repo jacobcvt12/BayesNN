@@ -1,17 +1,13 @@
 @testset "Constructors" begin
-    using Distributions, BayesNN, StatsFuns
+    using Distributions, BayesNN
 
-    # data size
     N = 1000  # number of observations
     D = 3     # number of covariates including intercept
 
     # generate data
-    srand(1)                  # insure reproducibility
-    X = rand(Normal(), N, D)  # generate covariates
-    X[:, 1] = 1               # make first column intercept
-    b = rand(Normal(), D)     # coefficients
-    θ = logistic.(X * b)      # simulate dependent variables
-    y = rand.(Bernoulli.(θ))  # simulate dependent variables
+    srand(1)                 
+    X = rand(Normal(), N, D)  
+    y = rand(Bernoulli(0.5), N)  
 
     @test_nowarn net = Nnet(y, X)
 end
