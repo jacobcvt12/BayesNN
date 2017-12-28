@@ -1,6 +1,7 @@
 # BayesNN
 
 [![Build Status](https://travis-ci.org/jacobcvt12/BayesNN.jl.svg?branch=master)](https://travis-ci.org/jacobcvt12/BayesNN.jl)
+[![codecov](https://codecov.io/gh/jacobcvt12/BayesNN.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jacobcvt12/BayesNN.jl)
 
 Bayesian Neural Networks fit with Variational Inference
 
