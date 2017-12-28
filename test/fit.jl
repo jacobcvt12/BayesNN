@@ -14,5 +14,5 @@
     y = rand.(Bernoulli.(θ))  # simulate dependent variables
     net = Nnet(y, X)
 
-    @test_nowarn BayesNN.fit(net)
+    @test_nowarn BayesNN.fit(net, Adam(α=1.0))
 end
