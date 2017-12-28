@@ -5,6 +5,12 @@
 
 Bayesian Neural Networks fit with Variational Inference
 
+# Description
+
+`BayesNN` is a Julia package for fitting Bayesian Neural Networks. Currently, models are limited to classification problems only and are fit using the "reparameterization method" as described in Kingma, D. P. & Welling, M. (2013). Auto-Encoding Variational Bayes.. CoRR, abs/1312.6114. 
+
+At the present, a prior is provided for the Neural Network weights and the posterior is approximated using a Gaussian variational density with the independence assumption. In the future, more flexible variational densities will be added and regression capabilities will be implemented.
+
 # Example
 
 ```julia
