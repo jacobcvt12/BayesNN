@@ -1,5 +1,7 @@
 # BayesNN
 
+[![Build Status](https://travis-ci.org/jacobcvt12/BayesNN.svg?branch=master)](https://travis-ci.org/jacobcvt12/BayesNN)
+
 Bayesian Neural Networks fit with Variational Inference
 
 # Example
