@@ -1,5 +1,5 @@
 @testset "Fit" begin
-    using Distributions, BayesNN, StatsFuns
+    using Distributions, BayesNN, StatsFuns, GradDescent
 
     # data size
     N = 1000  # number of observations
